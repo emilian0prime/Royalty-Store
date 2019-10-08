@@ -1,0 +1,95 @@
+const contractSource = `
+  contract Royality =
+    
+    record design =
+      { designerAddress: address,
+        designUrl      : string,
+        designerName   : string,
+        designTips     : int }
+
+    record trade =
+      { royalityAddress: address,
+        clientAddress  : address,
+        clientEmail    : string,
+        clientNumber   : string,
+        itemName       : string,
+        itemAmount     : int }
+        
+    record state =
+      { designs      : map(int, design),
+        designsLength: int,
+        trades       : map(int, trade),
+        tradesLength : int }
+        
+    entrypoint init() =
+      { designs = {},
+        designsLength = 0,
+        trades = {},
+        tradesLength = 0 }
+
+    entrypoint get_designs_length() : int =
+      state.designsLength
+
+    entrypoint get_trades_length() : int =
+      state.tradesLength
+        
+    stateful entrypoint upload_design(designUrl' : string, designerName' : string) =
+      let design = { designerAddress = Call.caller, designUrl = designUrl', designerName = designerName', designTips = 0}
+      let designIndex = get_designs_length() + 1
+      put(state{ designs[designIndex] = design, designsLength = designIndex })
+
+    stateful entrypoint order_product(clientEmail' : string, clientNumber' : string, itemName' : string, itemAmount' : int) =
+      let trade = { royalityAddress = ak_2o5ZXFXU6uGNdLR2TzCBTSe7TCFfbtK8YAzMCd7zhosD9xymcq, clientAddress = Call.caller, clientEmail = clientEmail', clientNumber = clientNumber', itemName = itemName', itemAmount = itemAmount'}
+      Chain.spend(trade.royalityAddress, Call.value)
+      let tradeIndex = get_trades_length() + 1
+      put(state{ trades[tradeIndex] = trade, tradesLength = tradeIndex })
+
+    entrypoint get_design(designIndex : int) : design =
+      switch(Map.lookup(designIndex, state.designs))
+        None         => abort("Design not found")
+        Some(design) => design
+
+    entrypoint get_trade(tradeIndex : int) : trade =
+      switch(Map.lookup(tradeIndex, state.trades))
+        None        => abort("Trade not found")
+        Some(trade) => trade
+      
+    stateful entrypoint tip_design(designIndex : int) =
+      let design = get_design(designIndex)
+      Chain.spend(design.designerAddress, Call.value)
+      let updatedDesignTipCount = design.designTips + Call.value
+      let updatedDesigns = state.designs{ [designIndex].designTips = updatedDesignTipCount }
+      put(state{ designs = updatedDesigns })
+`;
+
+const contractAddress = 'ct_1AoDBXQBopjZcPHMPpnPpwoKi8KmW18HAcbQGseSTUfzfa1kq';
+var client = null;
+var contractInstance = null;
+var designArray = [];
+
+window.addEventListener('load', async () => {
+  $("#loader").show();
+
+  client = await Ae.Aepp();
+  contractInstance = await client.getContractInstance(contractSource, {contractAddress});
+
+  $("#loader").hide();
+});
+
+$('#uploadBtn').click(async function(){
+  $("#loader").show();
+
+  const designerName = ($('#designerName').val()),
+        designUrl = ($('#designUrl').val());
+
+  await contractInstance.methods.upload_design(designUrl, designerName);
+
+  designArray.push({
+    designerName: designerName,
+    designUrl: designUrl,
+    designIndex: designArray.length + 1,
+    tips: 0,
+  })
+  
+  $("#loader").hide();
+});

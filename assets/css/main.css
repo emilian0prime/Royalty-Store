@@ -1,0 +1,55 @@
+body{
+  background-color:rgb(225, 224, 226);
+}
+
+.div-center {
+  margin: 0 auto;
+}
+
+#title-div {
+  margin: 1em;
+  color: rgb(14, 14, 14);
+}
+
+img{
+  width:60px;
+}
+
+#message {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width:100%;
+  z-index: 1;
+}
+
+#loader {
+  margin: 1em;
+  color:rgb(68, 68, 68);
+  display:none;
+}
+
+.inputForm{
+  margin-top: 2em;
+  margin-bottom: 0.5em;
+}
+
+.btn{
+  background-color: rgb(19, 35, 180);
+  border-color: rgb(19, 0, 190);
+  color:white;
+  margin-top: 1em;
+}
+
+.card{
+  margin-top: 3em;
+  padding-top: 0.5em;
+  background-color: #F5F5F5;
+  border: 0.5em solid #F5F5F5;
+}
+
+.container{
+  min-height: 100vh;
+  max-height: 100vh;
+  overflow-y: auto;
+}

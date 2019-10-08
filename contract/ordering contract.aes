@@ -1,0 +1,35 @@
+  contract DesignUpload =
+  
+    record design =
+      { creatorAddress : address,
+        url            : string,
+        name           : string,
+        tipCount      : int }
+        
+    record state =
+      { designs      : map(int, design),
+        designsLength : int }
+        
+    entrypoint init() =
+      { designs = {},
+        designsLength = 0 }
+        
+    entrypoint getDesign(index : int) : design =
+      switch(Map.lookup(index, state.designs))
+        None    => abort("There was no design with this index uploaded.")
+        Some(x) => x
+        
+    stateful entrypoint uploadDesign(url' : string, name' : string) =
+      let design = { creatorAddress = Call.caller, url = url', name = name', tipCount = 0}
+      let index = getDesignsLength() + 1
+      put(state{ designs[index] = design, designsLength = index })
+      
+    entrypoint getDesignsLength() : int =
+      state.designsLength
+      
+    stateful entrypoint tipDesign(index : int) =
+      let design = getDesign(index)
+      Chain.spend(design.creatorAddress, Call.value)
+      let updatedtipCount = design.tipCount + Call.value
+      let updatedDesigns = state.designs{ [index].tipCount = updatedtipCount }
+      put(state{ designs = updatedDesigns })
